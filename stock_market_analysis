@@ -1,0 +1,84 @@
+Attribute VB_Name = "Module1"
+Sub stock_market_analysis()
+    
+    Dim WsCount As Integer
+    Dim LastRow As Long
+    Dim Ws As String
+    Dim TickCount As Long
+    Dim Tick As String
+    Dim TotVol As Double
+    Dim YrChg As Double
+    Dim First As Long
+    Dim PerChg As Double
+    
+    'Count of the worksheets
+    WsCount = ActiveWorkbook.Sheets.Count
+
+    'Loop through all worksheets
+    For i = 1 To WsCount
+        'Activate worksheet and grab name
+        Worksheets(i).Activate
+        Ws = ActiveWorkbook.Worksheets(i).Name
+        
+        'Find the last row of the sheet
+        LastRow = Cells.Find("*", searchorder:=xlByRows, searchdirection:=xlPrevious).Row
+        
+        TickCount = 1
+        First = 2
+        
+        'Loop through each row of the table
+        For j = 2 To LastRow
+            
+            'Keep track of total volume before ticker changes
+            TotVol = Cells(j, 7).Value + TotVol
+            
+            'Find where first event of ticker is
+            
+            If Cells(j, 1).Value <> Cells(j + 1, 1) Then
+                'Write ticker into summary table
+                TickCount = TickCount + 1
+                Tick = Cells(j, 1).Value
+                Cells(TickCount, 9).Value = Tick
+                
+                'Write yearly change and percent change into summary table
+                YrChg = Cells(j, 6).Value - Cells(First, 3).Value
+                If YrChg <> 0 Then
+                    PerChg = YrChg / Cells(First, 3).Value
+                Else
+                    PerChg = 0
+                End If
+                Cells(TickCount, 10).Value = YrChg
+                Cells(TickCount, 10).NumberFormat = "0.000"
+                Cells(TickCount, 11).Value = PerChg
+                Cells(TickCount, 11).NumberFormat = "0.00%"
+                First = j + 1
+                
+                If YrChg > 0 Then
+                    Cells(TickCount, 10).Interior.ColorIndex = 4
+                Else
+                    Cells(TickCount, 10).Interior.ColorIndex = 3
+                End If
+                
+                'Write percent change into summary table
+                Cells(TickCount, 11).Value = PerChg
+                
+                'Write total stock volume into summary table
+                Cells(TickCount, 12).Value = TotVol
+                
+                'Reset total volume to zero before checking for another change in ticker
+                TotVol = 0
+                YrChange = 0
+                
+            End If
+            
+        Next j
+        
+        'Create summary table headers
+        Range("I1").Value = "Ticker"
+        Range("J1").Value = "Yearly Change"
+        Range("K1").Value = "Percent Change"
+        Range("L1").Value = "Total Stock Volume"
+        
+    Next i
+    
+End Sub
